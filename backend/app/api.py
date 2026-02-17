@@ -35,6 +35,17 @@ app.add_middleware(
 
 @app.get("/health", response_model=HealthResponse)
 def health_check():
+    """Check the health status of the API.
+    
+    Args:
+        None
+        
+    Returns:
+        HealthResponse: Object containing status and version information.
+        
+    Raises:
+        None
+    """
     return HealthResponse(status="healthy", version=__version__)
 
 
@@ -45,6 +56,18 @@ def list_prompts(
     collection_id: Optional[str] = None,
     search: Optional[str] = None
 ):
+    """Retrieve a list of all prompts with optional filtering and search.
+    
+    Args:
+        collection_id: Optional collection ID to filter prompts by collection.
+        search: Optional search query to filter prompts by title or content.
+        
+    Returns:
+        PromptList: Object containing list of prompts and total count.
+        
+    Raises:
+        None
+    """
     prompts = storage.get_all_prompts()
     
     # Filter by collection if specified
@@ -64,6 +87,17 @@ def list_prompts(
 
 @app.get("/prompts/{prompt_id}", response_model=Prompt)
 def get_prompt(prompt_id: str):
+    """Retrieve a prompt by its unique identifier.
+    
+    Args:
+        prompt_id: The unique identifier of the prompt to retrieve.
+        
+    Returns:
+        Prompt: The prompt object if found.
+        
+    Raises:
+        HTTPException: 404 error if prompt is not found.
+    """
     prompt = storage.get_prompt(prompt_id)
     if not prompt:
         raise HTTPException(status_code=404, detail="Prompt not found")
@@ -72,6 +106,17 @@ def get_prompt(prompt_id: str):
 
 @app.post("/prompts", response_model=Prompt, status_code=201)
 def create_prompt(prompt_data: PromptCreate):
+    """Create a new prompt.
+    
+    Args:
+        prompt_data: PromptCreate object containing prompt details.
+        
+    Returns:
+        Prompt: The newly created prompt object.
+        
+    Raises:
+        HTTPException: 400 error if the specified collection does not exist.
+    """
     # Validate collection exists if provided
     if prompt_data.collection_id:
         collection = storage.get_collection(prompt_data.collection_id)
@@ -84,6 +129,19 @@ def create_prompt(prompt_data: PromptCreate):
 
 @app.put("/prompts/{prompt_id}", response_model=Prompt)
 def update_prompt(prompt_id: str, prompt_data: PromptUpdate):
+    """Update an entire prompt with new data.
+    
+    Args:
+        prompt_id: The unique identifier of the prompt to update.
+        prompt_data: PromptUpdate object containing new prompt details.
+        
+    Returns:
+        Prompt: The updated prompt object.
+        
+    Raises:
+        HTTPException: 404 error if prompt is not found.
+        HTTPException: 400 error if the specified collection does not exist.
+    """
     existing = storage.get_prompt(prompt_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Prompt not found")
@@ -108,12 +166,54 @@ def update_prompt(prompt_id: str, prompt_data: PromptUpdate):
     return storage.update_prompt(prompt_id, updated_prompt)
 
 
-# NOTE: PATCH endpoint is missing! Students need to implement this.
-# It should allow partial updates (only update provided fields)
+@app.patch("/prompts/{prompt_id}", response_model=Prompt)
+def patch_prompt(prompt_id: str, prompt_data: PromptUpdate):
+    """Partially update a prompt with only provided fields.
+    
+    Args:
+        prompt_id: The unique identifier of the prompt to update.
+        prompt_data: PromptUpdate object containing fields to update.
+        
+    Returns:
+        Prompt: The updated prompt object.
+        
+    Raises:
+        HTTPException: 404 error if prompt is not found.
+        HTTPException: 400 error if the specified collection does not exist.
+    """
+    existing = storage.get_prompt(prompt_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Prompt not found")
+    
+    # Validate collection if provided
+    if prompt_data.collection_id:
+        collection = storage.get_collection(prompt_data.collection_id)
+        if not collection:
+            raise HTTPException(status_code=400, detail="Collection not found")
+    
+    # Update only provided fields
+    update_data = prompt_data.model_dump(exclude_unset=True)
+    updated_prompt = existing.model_copy(update={
+        **update_data,
+        "updated_at": get_current_time()
+    })
+    
+    return storage.update_prompt(prompt_id, updated_prompt)
 
 
 @app.delete("/prompts/{prompt_id}", status_code=204)
 def delete_prompt(prompt_id: str):
+    """Delete a prompt by its unique identifier.
+    
+    Args:
+        prompt_id: The unique identifier of the prompt to delete.
+        
+    Returns:
+        None
+        
+    Raises:
+        HTTPException: 404 error if prompt is not found.
+    """
     if not storage.delete_prompt(prompt_id):
         raise HTTPException(status_code=404, detail="Prompt not found")
     return None
@@ -123,12 +223,34 @@ def delete_prompt(prompt_id: str):
 
 @app.get("/collections", response_model=CollectionList)
 def list_collections():
+    """Retrieve a list of all collections.
+    
+    Args:
+        None
+        
+    Returns:
+        CollectionList: Object containing list of collections and total count.
+        
+    Raises:
+        None
+    """
     collections = storage.get_all_collections()
     return CollectionList(collections=collections, total=len(collections))
 
 
 @app.get("/collections/{collection_id}", response_model=Collection)
 def get_collection(collection_id: str):
+    """Retrieve a collection by its unique identifier.
+    
+    Args:
+        collection_id: The unique identifier of the collection to retrieve.
+        
+    Returns:
+        Collection: The collection object if found.
+        
+    Raises:
+        HTTPException: 404 error if collection is not found.
+    """
     collection = storage.get_collection(collection_id)
     if not collection:
         raise HTTPException(status_code=404, detail="Collection not found")
@@ -137,6 +259,17 @@ def get_collection(collection_id: str):
 
 @app.post("/collections", response_model=Collection, status_code=201)
 def create_collection(collection_data: CollectionCreate):
+    """Create a new collection.
+    
+    Args:
+        collection_data: CollectionCreate object containing collection details.
+        
+    Returns:
+        Collection: The newly created collection object.
+        
+    Raises:
+        None
+    """
     collection = Collection(**collection_data.model_dump())
     return storage.create_collection(collection)
 
