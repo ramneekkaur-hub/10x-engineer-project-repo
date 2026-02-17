@@ -1,3 +1,4 @@
+
 """API tests for PromptLab
 
 These tests verify the API endpoints work correctly.
