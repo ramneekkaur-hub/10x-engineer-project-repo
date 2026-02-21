@@ -1,3 +1,8 @@
+from datetime import datetime
+from typing import Optional, List
+from pydantic import BaseModel, Field
+from uuid import uuid4
+
 def generate_id() -> str:
     """Generate a new unique identifier using UUID4.
 

@@ -17,32 +17,32 @@ class Storage:
         _prompts: Dictionary mapping prompt IDs to Prompt objects.
         _collections: Dictionary mapping collection IDs to Collection objects.
     """
-        """Create and store a new prompt.
-        Args:
-            prompt: The Prompt object to create and store.
-        Returns:
-            The created Prompt object.
-        Raises:
-            ValueError: If prompt is None or prompt.id is empty.
-        Example:
-            >>> prompt = Prompt(id="p1", title="My Prompt")
-            >>> created = storage.create_prompt(prompt)
-            >>> created.id
-            "p1"
-        """
-        """Retrieve a prompt by its unique identifier.
-        Args:
-            prompt_id: The unique identifier of the prompt to retrieve.
-        Returns:
-            The Prompt object if found, None otherwise.
-        Raises:
-            ValueError: If prompt_id is empty.
-        Example:
-            >>> prompt = storage.get_prompt("p1")
-            >>> print(prompt.title)
-            "My Prompt"
-        """
-        """Retrieve all stored prompts.
+    """Create and store a new prompt.
+    Args:
+    prompt: The Prompt object to create and store.
+    Returns:
+    The created Prompt object.
+    Raises:
+    ValueError: If prompt is None or prompt.id is empty.
+    Example:
+    >>> prompt = Prompt(id="p1", title="My Prompt")
+    >>> created = storage.create_prompt(prompt)
+    >>> created.id
+    "p1"
+    """
+    """Retrieve a prompt by its unique identifier.
+    Args:
+    prompt_id: The unique identifier of the prompt to retrieve.
+    Returns:
+    The Prompt object if found, None otherwise.
+    Raises:
+    ValueError: If prompt_id is empty.
+    Example:
+    >>> prompt = storage.get_prompt("p1")
+    >>> print(prompt.title)
+    "My Prompt"
+    """
+    """Retrieve all stored prompts.
         Returns:
             A list of all Prompt objects in storage. Returns an empty list
             if no prompts exist.
@@ -51,7 +51,7 @@ class Storage:
             >>> len(prompts)
             5
         """
-        """Update an existing prompt.
+    """Update an existing prompt.
         Args:
             prompt_id: The unique identifier of the prompt to update.
             prompt: The updated Prompt object.
@@ -64,7 +64,7 @@ class Storage:
             >>> updated.title
             "Updated Title"
         """
-        """Delete a prompt by its unique identifier.
+    """Delete a prompt by its unique identifier.
         Args:
             prompt_id: The unique identifier of the prompt to delete.
         Returns:
@@ -77,7 +77,7 @@ class Storage:
             >>> deleted
             True
         """
-        """Create and store a new collection.
+    """Create and store a new collection.
         Args:
             collection: The Collection object to create and store.
         Returns:
@@ -90,7 +90,7 @@ class Storage:
             >>> created.id
             "c1"
         """
-        """Retrieve a collection by its unique identifier.
+    """Retrieve a collection by its unique identifier.
         Args:
             collection_id: The unique identifier of the collection to retrieve.
         Returns:
@@ -102,7 +102,7 @@ class Storage:
             >>> print(collection.name)
             "My Collection"
         """
-        """Retrieve all stored collections.
+    """Retrieve all stored collections.
         Returns:
             A list of all Collection objects in storage. Returns an empty list
             if no collections exist.
@@ -111,7 +111,7 @@ class Storage:
             >>> len(collections)
             3
         """
-        """Delete a collection by its unique identifier.
+    """Delete a collection by its unique identifier.
         Args:
             collection_id: The unique identifier of the collection to delete.
         Returns:
@@ -124,7 +124,7 @@ class Storage:
             >>> deleted
             True
         """
-        """Retrieve all prompts belonging to a specific collection.
+    """Retrieve all prompts belonging to a specific collection.
         Args:
             collection_id: The unique identifier of the collection.
         Returns:
@@ -138,7 +138,7 @@ class Storage:
             >>> len(prompts)
             4
         """
-        """Clear all prompts and collections from storage.
+    """Clear all prompts and collections from storage.
         This method removes all data stored in memory. Use with caution
         as this operation cannot be undone.
         Example:
