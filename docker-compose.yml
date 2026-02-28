@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - FLASK_ENV=development
+      - DEBUG=True
+    volumes:
+      - ./backend:/app
+      - /app/__pycache__
