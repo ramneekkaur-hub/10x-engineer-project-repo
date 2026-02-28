@@ -1,5 +1,3 @@
-"""FastAPI routes for PromptLab"""
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
@@ -13,7 +11,6 @@ from app.models import (
 from app.storage import storage
 from app.utils import sort_prompts_by_date, filter_prompts_by_collection, search_prompts
 from app import __version__
-
 
 app = FastAPI(
     title="PromptLab API",
@@ -30,21 +27,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # ============== Health Check ==============
 
 @app.get("/health", response_model=HealthResponse)
 def health_check():
     """Check the health status of the API.
     
-    Args:
-        None
-        
     Returns:
         HealthResponse: Object containing status and version information.
-        
-    Raises:
-        None
     """
     return HealthResponse(status="healthy", version=__version__)
 
@@ -58,15 +48,8 @@ def list_prompts(
 ):
     """Retrieve a list of all prompts with optional filtering and search.
     
-    Args:
-        collection_id: Optional collection ID to filter prompts by collection.
-        search: Optional search query to filter prompts by title or content.
-        
     Returns:
         PromptList: Object containing list of prompts and total count.
-        
-    Raises:
-        None
     """
     prompts = storage.get_all_prompts()
     
@@ -78,20 +61,32 @@ def list_prompts(
     if search:
         prompts = search_prompts(prompts, search)
     
-    # Sort by date (newest first)
-    # Note: There might be an issue with the sorting...
-    prompts = sort_prompts_by_date(prompts, descending=True)
+    # Note: Sorting functionality is corrected here
+    # Sort by descending date to get the newest prompts first
+    prompts = sort_prompts_by_date(prompts)[::-1]
     
     return PromptList(prompts=prompts, total=len(prompts))
+
+
+def validate_collection(collection_id: Optional[str]):
+    """Helper function to validate collection existence.
+
+    Args:
+        collection_id: The ID of the collection to validate.
+
+    Raises:
+        HTTPException: 400 error if collection does not exist.
+    """
+    if collection_id:
+        collection = storage.get_collection(collection_id)
+        if not collection:
+            raise HTTPException(status_code=400, detail="Collection not found")
 
 
 @app.get("/prompts/{prompt_id}", response_model=Prompt)
 def get_prompt(prompt_id: str):
     """Retrieve a prompt by its unique identifier.
     
-    Args:
-        prompt_id: The unique identifier of the prompt to retrieve.
-        
     Returns:
         Prompt: The prompt object if found.
         
@@ -108,9 +103,6 @@ def get_prompt(prompt_id: str):
 def create_prompt(prompt_data: PromptCreate):
     """Create a new prompt.
     
-    Args:
-        prompt_data: PromptCreate object containing prompt details.
-        
     Returns:
         Prompt: The newly created prompt object.
         
@@ -118,10 +110,7 @@ def create_prompt(prompt_data: PromptCreate):
         HTTPException: 400 error if the specified collection does not exist.
     """
     # Validate collection exists if provided
-    if prompt_data.collection_id:
-        collection = storage.get_collection(prompt_data.collection_id)
-        if not collection:
-            raise HTTPException(status_code=400, detail="Collection not found")
+    validate_collection(prompt_data.collection_id)
     
     prompt = Prompt(**prompt_data.model_dump())
     return storage.create_prompt(prompt)
@@ -131,26 +120,18 @@ def create_prompt(prompt_data: PromptCreate):
 def update_prompt(prompt_id: str, prompt_data: PromptUpdate):
     """Update an entire prompt with new data.
     
-    Args:
-        prompt_id: The unique identifier of the prompt to update.
-        prompt_data: PromptUpdate object containing new prompt details.
-        
     Returns:
         Prompt: The updated prompt object.
         
     Raises:
         HTTPException: 404 error if prompt is not found.
-        HTTPException: 400 error if the specified collection does not exist.
     """
     existing = storage.get_prompt(prompt_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Prompt not found")
     
     # Validate collection if provided
-    if prompt_data.collection_id:
-        collection = storage.get_collection(prompt_data.collection_id)
-        if not collection:
-            raise HTTPException(status_code=400, detail="Collection not found")
+    validate_collection(prompt_data.collection_id)
     
     # Update the prompt with new data and current timestamp
     updated_prompt = Prompt(
@@ -170,26 +151,18 @@ def update_prompt(prompt_id: str, prompt_data: PromptUpdate):
 def patch_prompt(prompt_id: str, prompt_data: PromptUpdate):
     """Partially update a prompt with only provided fields.
     
-    Args:
-        prompt_id: The unique identifier of the prompt to update.
-        prompt_data: PromptUpdate object containing fields to update.
-        
     Returns:
         Prompt: The updated prompt object.
         
     Raises:
         HTTPException: 404 error if prompt is not found.
-        HTTPException: 400 error if the specified collection does not exist.
     """
     existing = storage.get_prompt(prompt_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Prompt not found")
     
     # Validate collection if provided
-    if prompt_data.collection_id:
-        collection = storage.get_collection(prompt_data.collection_id)
-        if not collection:
-            raise HTTPException(status_code=400, detail="Collection not found")
+    validate_collection(prompt_data.collection_id)
     
     # Update only provided fields
     update_data = prompt_data.model_dump(exclude_unset=True)
@@ -205,12 +178,6 @@ def patch_prompt(prompt_id: str, prompt_data: PromptUpdate):
 def delete_prompt(prompt_id: str):
     """Delete a prompt by its unique identifier.
     
-    Args:
-        prompt_id: The unique identifier of the prompt to delete.
-        
-    Returns:
-        None
-        
     Raises:
         HTTPException: 404 error if prompt is not found.
     """
@@ -225,14 +192,8 @@ def delete_prompt(prompt_id: str):
 def list_collections():
     """Retrieve a list of all collections.
     
-    Args:
-        None
-        
     Returns:
         CollectionList: Object containing list of collections and total count.
-        
-    Raises:
-        None
     """
     collections = storage.get_all_collections()
     return CollectionList(collections=collections, total=len(collections))
@@ -242,9 +203,6 @@ def list_collections():
 def get_collection(collection_id: str):
     """Retrieve a collection by its unique identifier.
     
-    Args:
-        collection_id: The unique identifier of the collection to retrieve.
-        
     Returns:
         Collection: The collection object if found.
         
@@ -261,14 +219,8 @@ def get_collection(collection_id: str):
 def create_collection(collection_data: CollectionCreate):
     """Create a new collection.
     
-    Args:
-        collection_data: CollectionCreate object containing collection details.
-        
     Returns:
         Collection: The newly created collection object.
-        
-    Raises:
-        None
     """
     collection = Collection(**collection_data.model_dump())
     return storage.create_collection(collection)
@@ -276,32 +228,17 @@ def create_collection(collection_data: CollectionCreate):
 
 @app.delete("/collections/{collection_id}", status_code=204)
 def delete_collection(collection_id: str):
-    # BUG #4: We delete the collection but don't handle the prompts!
-    # Prompts with this collection_id become orphaned with invalid reference
-    # Should either: delete the prompts, set collection_id to None, or prevent deletion
-    @app.patch("/prompts/{prompt_id}", response_model=Prompt)
-    def patch_prompt(prompt_id: str, prompt_data: PromptUpdate):
-        existing = storage.get_prompt(prompt_id)
-        if not existing:
-            raise HTTPException(status_code=404, detail="Prompt not found")
+    """Delete a collection by its unique identifier.
         
-        # Validate collection if provided
-        if prompt_data.collection_id:
-            collection = storage.get_collection(prompt_data.collection_id)
-            if not collection:
-                raise HTTPException(status_code=400, detail="Collection not found")
-        
-        # Update only provided fields
-        update_data = prompt_data.model_dump(exclude_unset=True)
-        updated_prompt = existing.model_copy(update={
-            **update_data,
-            "updated_at": get_current_time()
-        })
-        
-        return storage.update_prompt(prompt_id, updated_prompt)
+    Raises:
+        HTTPException: 404 error if collection is not found.
+    """
     if not storage.delete_collection(collection_id):
         raise HTTPException(status_code=404, detail="Collection not found")
     
-    # Missing: Handle prompts that belong to this collection!
+    # Handle prompts that belong to this collection
+    prompts = storage.get_prompts_by_collection(collection_id)
+    for prompt in prompts:
+        storage.delete_prompt(prompt.id)
     
     return None
