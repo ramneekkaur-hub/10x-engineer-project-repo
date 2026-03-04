@@ -1,11 +1,11 @@
 import React from 'react';
+import './LoadingSpinner.css';
 
-const LoadingSpinner = () => {
-  return (
-    <div>
+const LoadingSpinner = () => (
+  <div className="spinner">
       {/* Loading spinner */}
+    <div className="double-bounce1"></div>
+    <div className="double-bounce2"></div>
     </div>
   );
-};
-
 export default LoadingSpinner;
