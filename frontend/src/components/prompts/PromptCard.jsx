@@ -1,9 +1,10 @@
 import React from 'react';
 
-const PromptCard = ({ prompt }) => {
+const PromptCard = ({ prompt, onPromptSelect }) => {
   return (
-    <div>
-      {/* Individual prompt display */}
+    <div className="prompt-card" onClick={() => onPromptSelect(prompt.id)}>
+      <h3>{prompt.title}</h3>
+      {/* Additional prompt details */}
     </div>
   );
 };
