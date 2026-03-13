@@ -1,5 +1,4 @@
-const BASE_URL = 'https://your-api-base-url.com/'; // Replace with your actual API base URL
-
+const BASE_URL = 'https://silver-enigma-g49rg6p9x9vwcq4p-8000.app.github.dev/'; // Updated to the GitHub Codespaces forwarded URL
 const apiClient = async (endpoint, { method = 'GET', body, headers } = {}) => {
   const config = {
     method,
@@ -27,3 +26,4 @@ const apiClient = async (endpoint, { method = 'GET', body, headers } = {}) => {
 };
 
 export default apiClient;
+

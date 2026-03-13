@@ -28,6 +28,9 @@ app.add_middleware(
 )
 
 # ============== Health Check ==============
+@app.get("/")
+def root():
+    return {"message": "Welcome to PromptLab API! Try /health, /prompts, /collections"}
 
 @app.get("/health", response_model=HealthResponse)
 def health_check():
@@ -42,15 +45,7 @@ def health_check():
 # ============== Prompt Endpoints ==============
 
 @app.get("/prompts", response_model=PromptList)
-def list_prompts(
-    collection_id: Optional[str] = None,
-    search: Optional[str] = None
-):
-    """Retrieve a list of all prompts with optional filtering and search.
-    
-    Returns:
-        PromptList: Object containing list of prompts and total count.
-    """
+def list_prompts(collection_id: Optional[str] = None, search: Optional[str] = None):
     prompts = storage.get_all_prompts()
     
     # Filter by collection if specified
@@ -61,9 +56,12 @@ def list_prompts(
     if search:
         prompts = search_prompts(prompts, search)
     
-    # Note: Sorting functionality is corrected here
-    # Sort by descending date to get the newest prompts first
-    prompts = sort_prompts_by_date(prompts)[::-1]
+    # Safe sort by date: newest first
+    prompts = sorted(
+        prompts, 
+        key=lambda p: getattr(p, "created_at", None) or 0, 
+        reverse=True
+    )
     
     return PromptList(prompts=prompts, total=len(prompts))
 

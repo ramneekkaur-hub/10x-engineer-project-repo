@@ -1,31 +1,66 @@
 import React, { useEffect, useState } from 'react';
 import PromptCard from './PromptCard';
-import { getPrompts } from '../../api/prompts';
+import PromptForm from './PromptForm';
+import { getPrompts, deletePrompt } from '../../api/prompts';
 
-const PromptList = ({ onPromptSelect, selectedCollectionId }) => {
+const PromptList = ({ searchQuery, onPromptUpdate }) => {
   const [prompts, setPrompts] = useState([]);
+  const [editingPromptId, setEditingPromptId] = useState(null);
+
+  const fetchPrompts = async () => {
+    try {
+      const data = await getPrompts();
+      setPrompts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Failed to load prompts:', error);
+      setPrompts([]);
+    }
+  };
 
   useEffect(() => {
-    const fetchPrompts = async () => {
-      try {
-        const data = await getPrompts();
-        const filteredPrompts = selectedCollectionId
-          ? data.filter(prompt => prompt.collectionId === selectedCollectionId)
-          : data;
-        setPrompts(filteredPrompts);
-      } catch (error) {
-        console.error('Failed to fetch prompts:', error);
-      }
-    };
-
     fetchPrompts();
-  }, [selectedCollectionId]);
+  }, []);
+
+  const handleEdit = (id) => {
+    setEditingPromptId(id);
+  };
+  
+  const handleDelete = async (id) => {
+    try {
+      await deletePrompt(id);
+      onPromptUpdate('Prompt deleted successfully!');
+      fetchPrompts(); // Refresh prompts after deletion
+    } catch (error) {
+      console.error('Failed to delete prompt:', error);
+    }
+  };
+
+  const handleFormSuccess = () => {
+    setEditingPromptId(null);
+    fetchPrompts();
+    onPromptUpdate('Prompt updated successfully!');
+  };
+
+  const filteredPrompts = prompts.filter(prompt =>
+    prompt.title && prompt.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <div className="prompt-list">
-      {prompts.map(prompt => (
-        <PromptCard key={prompt.id} prompt={prompt} onPromptSelect={onPromptSelect} />
-      ))}
+    <div>
+      {editingPromptId && (
+        <PromptForm promptId={editingPromptId} onSuccess={handleFormSuccess} />
+      )}
+      <div className="prompt-list">
+        {filteredPrompts.map(prompt => (
+          <PromptCard
+            key={prompt.id}
+            prompt={prompt}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onSelect={() => console.log('Prompt selected:', prompt.id)}
+          />
+        ))}
+      </div>
     </div>
   );
 };
